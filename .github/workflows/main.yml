@@ -23,6 +23,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter database exec prisma generate
       - run: pnpm lint
       - run: pnpm format:check
 
@@ -57,7 +58,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter database exec prisma migrate deploy
       - run: pnpm --filter database exec prisma generate
-      - run: pnpm test -- --coverage
+      - run: pnpm -r --filter=./apps/* test -- --coverage
       - run: pnpm test:e2e
 
   build:
