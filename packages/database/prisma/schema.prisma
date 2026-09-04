@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  memberships  Membership[]
+  createdTasks Task[]         @relation("TaskCreatedBy")
+  assignments  TaskAssignee[]
+  comments     Comment[]
+  activities   ActivityLog[]
+
+  @@map("users")
+}
+
+model Organization {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  plan        String        @default("free")
+  createdAt   DateTime      @default(now())
+
+  memberships Membership[]
+  projects    Project[]
+  labels      Label[]
+  invitations Invitation[]
+  activities  ActivityLog[]
+
+  @@map("organizations")
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  role           Role         @default(MEMBER)
+  userId         String
+  organizationId String
+  joinedAt       DateTime     @default(now())
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("memberships")
+}
+
+model Invitation {
+  id             String       @id @default(cuid())
+  email          String
+  role           Role         @default(MEMBER)
+  token          String       @unique
+  expiresAt      DateTime
+  organizationId String
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("invitations")
+}
+
+model Project {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  status         String       @default("active")
+  organizationId String
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  columns        Column[]
+  tasks          Task[]
+
+  @@map("projects")
+}
+
+model Column {
+  id        String  @id @default(cuid())
+  name      String
+  order     Int
+  projectId String
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@map("columns")
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  position    Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  projectId   String
+  columnId    String
+  createdById String
+
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  column      Column         @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  assignees   TaskAssignee[]
+  labels      TaskLabel[]
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  taskId String
+  userId String
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+  @@map("task_assignees")
+}
+
+model Label {
+  id             String       @id @default(cuid())
+  name           String
+  color          String
+  organizationId String
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tasks          TaskLabel[]
+
+  @@map("labels")
+}
+
+model TaskLabel {
+  taskId  String
+  labelId String
+
+  task    Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@map("task_labels")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@map("comments")
+}
+
+model Attachment {
+  id       String @id @default(cuid())
+  url      String
+  filename String
+  taskId   String
+
+  task     Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model ActivityLog {
+  id             String       @id @default(cuid())
+  action         String
+  entityType     String
+  entityId       String
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  actorId        String
+  organizationId String
+
+  actor          User         @relation(fields: [actorId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+}
