@@ -8,6 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
   AuthenticatedUser,
@@ -21,6 +22,8 @@ import { MoveTaskDto } from './dto/move-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksService } from './tasks.service';
 
+@ApiTags('tasks')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class TasksController {
@@ -29,6 +32,7 @@ export class TasksController {
     private readonly projectsService: ProjectsService,
   ) {}
 
+  @ApiOperation({ summary: 'Create a task in a project column' })
   @Post('projects/:projectId/tasks')
   async create(
     @Param('projectId') projectId: string,
@@ -39,6 +43,7 @@ export class TasksController {
     return this.tasksService.create(projectId, user.id, dto);
   }
 
+  @ApiOperation({ summary: 'Update a task' })
   @Patch('tasks/:taskId')
   async update(
     @Param('taskId') taskId: string,
@@ -50,6 +55,9 @@ export class TasksController {
     return this.tasksService.update(taskId, dto);
   }
 
+  @ApiOperation({
+    summary: 'Move a task to a column and position (drag-and-drop reorder)',
+  })
   @Patch('tasks/:taskId/move')
   async move(
     @Param('taskId') taskId: string,
@@ -61,6 +69,7 @@ export class TasksController {
     return this.tasksService.move(taskId, dto);
   }
 
+  @ApiOperation({ summary: 'Delete a task' })
   @Delete('tasks/:taskId')
   async remove(
     @Param('taskId') taskId: string,
@@ -71,6 +80,7 @@ export class TasksController {
     return this.tasksService.remove(taskId);
   }
 
+  @ApiOperation({ summary: 'Assign a user to a task' })
   @Post('tasks/:taskId/assignees')
   async assign(
     @Param('taskId') taskId: string,
@@ -82,6 +92,7 @@ export class TasksController {
     return this.tasksService.assign(taskId, dto.userId);
   }
 
+  @ApiOperation({ summary: 'Unassign a user from a task' })
   @Delete('tasks/:taskId/assignees/:userId')
   async unassign(
     @Param('taskId') taskId: string,
@@ -93,6 +104,7 @@ export class TasksController {
     return this.tasksService.unassign(taskId, userId);
   }
 
+  @ApiOperation({ summary: 'Add a comment to a task' })
   @Post('tasks/:taskId/comments')
   async addComment(
     @Param('taskId') taskId: string,
@@ -104,6 +116,7 @@ export class TasksController {
     return this.tasksService.addComment(taskId, user.id, dto);
   }
 
+  @ApiOperation({ summary: 'List comments on a task' })
   @Get('tasks/:taskId/comments')
   async listComments(
     @Param('taskId') taskId: string,
