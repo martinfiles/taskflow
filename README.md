@@ -2,6 +2,8 @@
 
 TaskFlow es una plataforma SaaS B2B multi-tenant de gestión de proyectos: workspaces aislados por organización, tableros Kanban con drag-and-drop, roles y permisos (RBAC), y un dashboard de analítica de productividad por equipo.
 
+[![CI](https://github.com/martinfiles/taskflow/actions/workflows/main.yml/badge.svg)](https://github.com/martinfiles/taskflow/actions/workflows/main.yml)
+
 ## Stack
 
 | Capa            | Tecnología                                                                 |
