@@ -21,5 +21,6 @@ COPY --from=build /repo/apps/web/public ./apps/web/public
 COPY --from=build /repo/apps/web/node_modules ./apps/web/node_modules
 COPY --from=build /repo/apps/web/package.json ./apps/web/package.json
 COPY --from=build /repo/node_modules ./node_modules
+WORKDIR /repo/apps/web
 EXPOSE 3000
-CMD ["pnpm", "--filter", "web", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start"]
